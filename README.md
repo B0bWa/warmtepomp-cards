@@ -1,15 +1,13 @@
 # Warmtepomp Cards voor Home Assistant
 
-Twee geanimeerde dashboardkaarten voor Home Assistant die live laten zien wat je warmtepomp en warmtepompboiler doen: draaiende ventilator, stromend water, kleur van leidingen en tank op basis van temperatuur, ontdooi- en storingsindicatie.
+Een geanimeerde dashboardkaart voor Home Assistant die live laat zien wat je warmtepomp doet: draaiende ventilator, stromend water, kleur van leidingen en tank op basis van temperatuur, ontdooi- en storingsindicatie.
 
 | Kaart | Type |
 |---|---|
 | **Warmtepomp monoblock (geanimeerd)** — buitenunit, buffervat, cv-pomp, radiatoren en vloerverwarming met verdeler | `custom:heatpump-monoblock-card` |
-| **Warmtepompboiler (geanimeerd)** — doorsnede van een warmtepompboiler met condensorspiraal, element en tapwater | `custom:heatpump-boiler-card` |
 
 <p align="center">
-  <img src="images/monoblock.svg" alt="Warmtepomp monoblock-kaart" width="58%">
-  <img src="images/boiler.svg" alt="Warmtepompboiler-kaart" width="38%">
+  <img src="images/monoblock.svg" alt="Warmtepomp monoblock-kaart" width="70%">
 </p>
 <p align="center"><em>Voorbeeld met demowaarden — in Home Assistant bewegen ventilator, compressor en waterstroom mee met de live status.</em></p>
 
@@ -39,7 +37,7 @@ Twee geanimeerde dashboardkaarten voor Home Assistant die live laten zien wat je
 
 ## Gebruik
 
-Na installatie verschijnen beide kaarten in de kaartkiezer bij het bewerken van een dashboard. Omdat iedere installatie andere entiteitsnamen heeft, stel je je eigen sensoren in via de YAML-editor van de kaart onder `entities:`. Alles wat je niet invult valt terug op de standaardnamen van de **Tuya Heat Pump**-integratie (apparaatnamen `warmtepomp` en `boiler`). Ontbrekende entiteiten tonen gewoon `–`.
+Na installatie verschijnt de kaart in de kaartkiezer bij het bewerken van een dashboard. Omdat iedere installatie andere entiteitsnamen heeft, stel je je eigen sensoren in via de YAML-editor van de kaart onder `entities:`. Alles wat je niet invult valt terug op de standaardnamen van de **Tuya Heat Pump**-integratie (apparaatnaam `warmtepomp`). Ontbrekende entiteiten tonen gewoon `–`.
 
 ### Warmtepomp monoblock
 
@@ -86,44 +84,6 @@ entities:
 | `energy_today` / `energy_total` | Energie vandaag / totaal |
 | `thermostat` | `climate`-entiteit; bij `hvac_action: heating` draait de cv-pomp, en de kamertemperatuur bepaalt waar de leidingkleur van blauw naar warm omslaat |
 | `floor_pump` | Schakelaar/stekker van de vloerverwarmingspomp |
-
-### Warmtepompboiler
-
-<img src="images/boiler.svg" alt="Voorbeeld warmtepompboiler-kaart" width="340">
-
-Doorsnede van een warmtepompboiler: bovenin de warmtepompmodule met ventilator, verdamper, compressor en expansieventiel, daaronder de tank met condensorspiraal en elektrisch element. De tankkleur en het percentage laten zien hoe ver het water op temperatuur is.
-
-```yaml
-type: custom:heatpump-boiler-card
-title: Warmtepompboiler
-min_temp: 15
-entities:
-  tank_temp: sensor.boiler_inlet_water_temperature
-  setpoint: number.boiler_water_temperature_setpoint
-  power: sensor.boiler_stekker_vermogen        # optioneel
-  energy_today: sensor.boiler_energie_vandaag  # optioneel
-  energy_month: sensor.boiler_energie_maand    # optioneel
-```
-
-| Optie | Omschrijving |
-|---|---|
-| `title` | Titel van de kaart (standaard `Warmtepompboiler`) |
-| `min_temp` | Temperatuur die als "leeg" geldt voor de vulgraad (standaard `15`) |
-
-| Entiteit | Betekenis |
-|---|---|
-| `tank_temp` | Watertemperatuur in de tank |
-| `setpoint` | Gewenste temperatuur |
-| `ambient` / `coil` / `exhaust` / `return_gas` | Luchtinlaat-, verdamper-, persgas- en zuiggastemperatuur |
-| `eev` | Positie expansieventiel |
-| `fan` | Ventilatorstatus |
-| `compressor` / `water_pump` / `heater` | Compressor, waterpomp en elektrisch element aan/uit |
-| `defrost` | Ontdooien |
-| `power_switch` | Aan/uit-schakelaar |
-| `mode` | Modus (Standard / Boost / Electric Heater) |
-| `fault` / `online` | Storingscode en online-status |
-| `runtime_defrost` | Looptijd compressor tot volgende ontdooiing (min) |
-| `power` / `energy_today` / `energy_month` | Vermogen en verbruik, bijvoorbeeld van een slimme stekker |
 
 Klik op een waarde of onderdeel in de tekening om het detailvenster van die entiteit te openen.
 
