@@ -138,3 +138,13 @@ Klik op een waarde of onderdeel in de tekening om het detailvenster van die enti
 ## Licentie
 
 MIT — zie [LICENSE](LICENSE).
+
+
+## Wijzigingen in deze fork (B0bWa)
+
+Monoblock-kaart aangepast voor een huis met alleen radiatoren:
+- Zolder, verdieping, begane grond, vloerverwarming, verdeler en "Vloerpomp" verwijderd.
+- Open verdeler (`buffer_liters`, standaard 25) in plaats van buffervat.
+- Circulatiepomp met label (`pump_label`, standaard "Wilo · stand I").
+- Zes radiatoren in serie (`radiators:`, lijst met namen) en thermostaatwaarde (EMOS) bij de Gang.
+- Eenheid van ventilator/compressor komt uit de sensor; vermogen in kW wordt omgerekend.

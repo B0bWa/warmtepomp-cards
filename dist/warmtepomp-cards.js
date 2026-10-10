@@ -1,5 +1,5 @@
 /* warmtepomp-cards v1.0.0 — bundel van heatpump-monoblock-card en heatpump-boiler-card (MIT) */
-/* heatpump-monoblock-card v1.0.0 — geanimeerde monoblock-warmtepomp met buffervat, cv-pomp en vloerverdeler
+/* heatpump-monoblock-card v1.0.0 — geanimeerde monoblock-warmtepomp met open verdeler, circulatiepomp en radiatoren in serie (fork B0bWa)
  * https://github.com/AMensink/warmtepomp-cards — MIT-licentie
  * Stel je eigen entiteiten in onder `entities:` in de kaart-YAML; zie README.
  */
@@ -28,7 +28,6 @@ const HPM_DEFAULTS = {
   power: "sensor.warmtepomp_power",
   energy_today: "sensor.warmtepomp_today_s_energy",
   energy_total: "sensor.warmtepomp_total_energy",
-  floor_pump: null,
   thermostat: null,
 };
 const HPM_MODE_NL = {
@@ -41,7 +40,7 @@ const HPM_WORK_NL = { ECO: "Eco", Normal: "Normaal", Boost: "Boost" };
 class HeatpumpMonoblockCard extends HTMLElement {
   static getStubConfig() { return {}; }
   setConfig(config) {
-    this._config = { title: "Warmtepomp", buffer_liters: 30, ...config };
+    this._config = { title: "Warmtepomp", buffer_liters: 25, pump_label: "Wilo · stand I", radiators: ["Woonkamer", "Bijkeuken", "Badkamer", "Gang", "Slaapkamer", "Leefruimte"], ...config };
     this._e = { ...HPM_DEFAULTS, ...(config.entities || {}) };
     if (this._root) this._render();
   }
@@ -85,8 +84,6 @@ class HeatpumpMonoblockCard extends HTMLElement {
 
   _render() {
     if (!this._root) this._root = this.attachShadow({ mode: "open" });
-    // vloerverwarming: meander van (430,330) naar (590,380)
-    let floor = "M430 330"; for (let i = 0; i < 7; i++) { const x = 440 + i * 22; floor += ` H ${x} V ${i % 2 ? 330 : 380}`; } floor += " H 590";
     const L = (k, x, y, lbl, id, anchor = "start") =>
       `<g class="click" data-k="${k}"><text class="lbl" x="${x}" y="${y}" text-anchor="${anchor}">${lbl}</text><text class="val" x="${x}" y="${y + 17}" id="${id}" text-anchor="${anchor}">–</text></g>`;
     this._root.innerHTML = `
@@ -124,7 +121,6 @@ class HeatpumpMonoblockCard extends HTMLElement {
   .rad{stroke:var(--card-background-color,#fff);stroke-width:2}
   .air{fill:none;stroke:rgba(80,150,250,.8);stroke-width:2.5;stroke-dasharray:6 8;stroke-linecap:round;opacity:0}
   .snow{opacity:0}
-  .heatwave{fill:none;stroke-width:2;stroke-linecap:round;opacity:0}
   .manifold{fill:var(--secondary-background-color,#eee);stroke:var(--secondary-text-color,#888);stroke-width:2}
   .mstub{stroke:var(--secondary-text-color,#888);stroke-width:2;stroke-linecap:round}
   #fan{transform-origin:95px 175px;transform-box:view-box}
@@ -132,17 +128,13 @@ class HeatpumpMonoblockCard extends HTMLElement {
   .fan-on .air{opacity:1;animation:dash 1s linear infinite}
   .flow-on .flow.pri{opacity:1;animation:dash var(--flow-s,1.2s) linear infinite}
   .sec-on .flow.sec{opacity:1;animation:dash 1.3s linear infinite}
-  .floor-on .flow.fl{opacity:1;animation:dash 1.4s linear infinite}
   .comp-on #comp{animation:hum .18s ease-in-out infinite alternate}
   .comp-on .led{fill:rgb(60,200,90)}
   .defrost .snow{opacity:1;animation:pulse 2s ease-in-out infinite}
-  .warm .heatwave.hwr{opacity:.8;animation:wave 2.4s ease-in-out infinite}
-  .floor-on .heatwave.hwf{opacity:.8;animation:wave 2.4s ease-in-out infinite}
   .buf{transition:fill 1.2s ease}
   .pumpbody{fill:var(--card-background-color,#fff);stroke:var(--secondary-text-color,#888);stroke-width:2.5;transition:stroke .4s}
-  .sec-on #cvpump-body,.floor-on #flpump-body{stroke:rgb(60,200,90)}
+  .sec-on #cvpump-body{stroke:rgb(60,200,90)}
   .sec-on #cvpump{animation:spin .8s linear infinite}
-  .floor-on #flpump{animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   @keyframes dash{to{stroke-dashoffset:-28}}
   @keyframes hum{from{transform:translate(0,0)}to{transform:translate(.8px,-.6px)}}
@@ -164,7 +156,7 @@ class HeatpumpMonoblockCard extends HTMLElement {
   <div class="head"><div class="title">${this._config.title}</div><div class="status" id="status">–</div></div>
   <svg id="svg" viewBox="0 0 640 420" role="img" aria-label="Warmtepomp">
     <defs>
-      <clipPath id="hpm-buf"><rect x="330" y="26" width="52" height="100" rx="22"/></clipPath>
+      <clipPath id="hpm-buf"><rect x="322" y="26" width="56" height="384" rx="12"/></clipPath>
       <linearGradient id="hpm-bufg" x1="0" y1="0" x2="0" y2="1"><stop id="b-top" offset="0"/><stop id="b-bot" offset="1"/></linearGradient>
       <linearGradient id="hpm-shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".2" stop-color="#fff" stop-opacity=".25"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/></linearGradient>
     </defs>
@@ -196,69 +188,48 @@ class HeatpumpMonoblockCard extends HTMLElement {
     ${L("flow", 30, 390, "Debiet", "v-flow")}
     ${L("setpoint", 120, 390, "Doel aanvoer", "v-set")}
 
-    <!-- verdiepingsvloeren -->
-    <rect x="284" y="130" width="356" height="8" fill="var(--secondary-text-color,#888)" opacity=".35"/>
-    <rect x="284" y="266" width="356" height="8" fill="var(--secondary-text-color,#888)" opacity=".35"/>
-    <text class="zone" x="322" y="18">ZOLDER</text>
-    <text class="zone" x="322" y="154">VERDIEPING</text>
-    <text class="zone" x="322" y="290">BEGANE GROND</text>
+    <!-- primair: buitenunit ↔ open verdeler (circulatie warmtepomp) -->
+    <path class="pipe" id="p-sup" d="M214 222 H 294 V 50 H 322"/>
+    <path class="flow pri" id="f-sup" d="M214 222 H 294 V 50 H 322"/>
+    <path class="pipe" id="p-ret" d="M322 380 H 308 V 256 H 214"/>
+    <path class="flow pri" id="f-ret" d="M322 380 H 308 V 256 H 214"/>
 
-    <!-- primair: buitenunit ↔ buffervat (circulatie warmtepomp) -->
-    <path class="pipe" id="p-sup" d="M214 222 H 294 V 50 H 330"/>
-    <path class="flow pri" id="f-sup" d="M214 222 H 294 V 50 H 330"/>
-    <path class="pipe" id="p-ret" d="M330 105 H 308 V 256 H 214"/>
-    <path class="flow pri" id="f-ret" d="M330 105 H 308 V 256 H 214"/>
-
-    <!-- buffervat op zolder -->
+    <!-- open verdeler -->
     <g class="click" data-k="supply">
-      <g clip-path="url(#hpm-buf)"><rect class="buf" x="330" y="26" width="52" height="100" fill="url(#hpm-bufg)"/><rect x="330" y="26" width="52" height="100" fill="url(#hpm-shine)"/></g>
-      <rect class="shell" x="330" y="26" width="52" height="100" rx="22"/>
-      <text class="big" x="356" y="80" text-anchor="middle" id="v-buf">–</text>
-      <text class="sub" x="356" y="96" text-anchor="middle">${this._config.buffer_liters} L</text>
+      <g clip-path="url(#hpm-buf)"><rect class="buf" x="322" y="26" width="56" height="384" fill="url(#hpm-bufg)"/><rect x="322" y="26" width="56" height="384" fill="url(#hpm-shine)"/></g>
+      <rect class="shell" x="322" y="26" width="56" height="384" rx="12"/>
+      <text class="big" x="350" y="214" text-anchor="middle" id="v-buf">–</text>
+      <text class="sub" x="350" y="230" text-anchor="middle">${this._config.buffer_liters} L</text>
+      <text class="sub" x="350" y="243" text-anchor="middle">open</text>
+      <text class="sub" x="350" y="256" text-anchor="middle">verdeler</text>
     </g>
-    ${L("supply", 440, 70, "Aanvoer", "v-sup")}
-    ${L("return", 505, 70, "Retour", "v-ret")}
-    ${L("dt", 570, 70, "ΔT", "v-dt")}
+    ${L("supply", 470, 14, "Aanvoer", "v-sup")}
+    ${L("return", 530, 14, "Retour", "v-ret")}
+    ${L("dt", 590, 14, "ΔT", "v-dt")}
 
-    <!-- secundair: stijgleidingen, aanvoer 628 / retour 606 -->
-    <path class="pipe" id="p-s1" d="M382 50 H 628 V 318"/>
-    <path class="flow sec" id="f-s1" d="M382 50 H 628 V 318"/>
-    <path class="pipe" id="p-r1" d="M606 318 V 105 H 382"/>
-    <path class="flow sec" id="f-r1" d="M606 318 V 105 H 382"/>
-    <!-- cv-pomp (thermostaat) na buffervat -->
-    ${this._pump("cvpump", 405, 50, 11, "thermostat")}
-    <text class="lbl" x="405" y="32" text-anchor="middle">cv-pomp</text>
+    <!-- secundair: radiatoren in serie (aanvoer → woonkamer → … → retour) -->
+    <path class="pipe" id="p-a" d="M378 50 H 412 V 110 H 622 V 230"/>
+    <path class="flow sec" id="f-a" d="M378 50 H 412 V 110 H 622 V 230"/>
+    <path class="pipe" id="p-b" d="M622 230 H 412 V 350"/>
+    <path class="flow sec" id="f-b" d="M622 230 H 412 V 350"/>
+    <path class="pipe" id="p-c" d="M412 350 H 622 V 400 H 378"/>
+    <path class="flow sec" id="f-c" d="M412 350 H 622 V 400 H 378"/>
+    ${this._pump("cvpump", 398, 50, 11, "thermostat")}
+    <text class="lbl" x="386" y="32" text-anchor="start">${this._config.pump_label}</text>
 
-    <!-- verdieping: radiatoren -->
-    <path class="pipe" id="p-s2" d="M628 250 H 428 V 205 H 440"/>
-    <path class="flow sec" id="f-s2" d="M628 250 H 428 V 205 H 440"/>
-    <path class="pipe" id="p-r2" d="M568 222 H 606"/>
-    <path class="flow sec" id="f-r2" d="M568 222 H 606"/>
-    <g id="rad">${Array.from({ length: 9 }, (_, i) => `<rect class="rad radcol" x="${440 + i * 14}" y="175" width="12" height="62" rx="5"/>`).join("")}</g>
-    ${[460, 500, 540].map((x, i) => `<path class="heatwave hwr" id="hw${i}" d="M${x} 170 q 4 -6 0 -12 q -4 -6 0 -12" style="animation-delay:${i * .6}s"/>`).join("")}
-
-    <!-- begane grond: vloerverwarming met eigen verdeler en pomp -->
-    <path class="pipe" id="p-floor-in" d="M597 400 H 420 V 330 H 430"/>
-    <path class="flow fl" id="f-floor-in" d="M597 400 H 420 V 330 H 430"/>
-    <path class="pipe" id="p-floor" d="${floor}"/>
-    <path class="flow fl" id="f-floor" d="${floor}"/>
-    <path class="pipe" id="p-floor-out" d="M590 380 H 597"/>
-    <path class="flow fl" id="f-floor-out" d="M590 380 H 597"/>
-    <g class="click" data-k="floor_pump">
-      <rect class="manifold" x="597" y="318" width="40" height="92" rx="5"/>
-      ${[338, 356, 374, 392].map((y) => `<line class="mstub" x1="602" y1="${y}" x2="632" y2="${y}"/>`).join("")}
-    </g>
-    <text class="lbl" x="593" y="316" text-anchor="end">verdeler</text>
-    ${this._pump("flpump", 628, 292, 9, "floor_pump")}
-    <text class="lbl" x="600" y="296" text-anchor="end">vloerpomp</text>
-    ${[470, 520, 570].map((x, i) => `<path class="heatwave hwf" id="hf${i}" d="M${x} 322 q 4 -6 0 -12 q -4 -6 0 -12" style="animation-delay:${i * .8 + .3}s"/>`).join("")}
+    ${this._config.radiators.slice(0, 6).map((name, i) => {
+      const col = [0, 1, 1, 0, 0, 1], row = [0, 0, 1, 1, 2, 2];
+      const x0 = col[i] ? 530 : 420, cy = [110, 230, 350][row[i]];
+      const fins = Array.from({ length: 7 }, (_, f) => `<rect class="rad radcol" x="${x0 + f * 11}" y="${cy - 26}" width="9" height="52" rx="4"/>`).join("");
+      return `<g>${fins}<text class="lbl" x="${x0 + 38}" y="${cy - 32}" text-anchor="middle">${name}</text></g>`;
+    }).join("")}
+    ${L("thermostat", 420, 264, "EMOS thermostaat", "v-emos")}
   </svg>
   <div class="chips">
     <div class="chip" data-k="comp_hz" id="c-comp"><span class="dot"></span>Compressor</div>
     <div class="chip" data-k="fan_hz" id="c-fan"><span class="dot"></span>Ventilator</div>
     <div class="chip" data-k="flow" id="c-flow"><span class="dot"></span>Circulatie WP</div>
-    <div class="chip" data-k="thermostat" id="c-cv"><span class="dot"></span>Cv-pomp</div>
-    <div class="chip" data-k="floor_pump" id="c-floor"><span class="dot"></span>Vloerpomp</div>
+    <div class="chip" data-k="thermostat" id="c-cv"><span class="dot"></span>Circulatiepomp</div>
     <div class="chip" data-k="defrost" id="c-def"><span class="dot"></span>Ontdooien</div>
     <div class="chip" data-k="online" id="c-on"><span class="dot"></span>Online</div>
     <div class="chip warn" data-k="fault" id="c-fault"><span class="dot"></span>Storing</div>
@@ -283,7 +254,8 @@ class HeatpumpMonoblockCard extends HTMLElement {
     const $ = this._$, svg = $("svg");
     const set = (id, t) => { const el = $(id); if (el && el.textContent !== t) el.textContent = t; };
     const sup = this._num("supply"), ret = this._num("return"), flow = this._num("flow");
-    const compHz = this._num("comp_hz"), fanHz = this._num("fan_hz"), pw = this._num("power");
+    const compHz = this._num("comp_hz"), fanHz = this._num("fan_hz");
+    const pwRaw = this._num("power"), pw = /^kw$/i.test(this._unit("power")) ? pwRaw * 1000 : pwRaw;
     const comp = Number.isFinite(compHz) ? compHz > 0 : this._on("compressor");
     const fan = Number.isFinite(fanHz) ? fanHz > 0 : comp;
     const flowing = Number.isFinite(flow) ? flow > 0.5 : comp;
@@ -297,29 +269,23 @@ class HeatpumpMonoblockCard extends HTMLElement {
     const th = this._st("thermostat");
     const act = th ? String(th.attributes.hvac_action || "").toLowerCase() : "";
     const cvOn = th ? act === "heating" || act === "cooling" : flowing;
-    // vloerpomp: schakelaar of slimme stekker (optioneel)
-    const floorOn = this._e.floor_pump ? this._on("floor_pump") : power;
 
     svg.classList.toggle("comp-on", comp);
     svg.classList.toggle("fan-on", fan);
     svg.classList.toggle("flow-on", flowing);
     svg.classList.toggle("sec-on", cvOn);
-    svg.classList.toggle("floor-on", !!floorOn);
     svg.classList.toggle("defrost", defrost);
     svg.classList.toggle("warm", cvOn && !cooling && Number.isFinite(sup) && sup >= 24);
     if (fan) svg.style.setProperty("--fan-s", `${Math.max(0.35, Math.min(2.5, 40 / Math.max(fanHz || 20, 1))).toFixed(2)}s`);
     if (flowing) svg.style.setProperty("--flow-s", `${Math.max(0.5, Math.min(3, 14 / Math.max(flow || 10, 1))).toFixed(2)}s`);
 
     const cs = this._col(sup), cr = this._col(ret);
-    for (const id of ["p-sup", "f-sup", "p-s1", "f-s1", "p-s2", "f-s2"]) $(id).style.stroke = cs;
-    for (const id of ["p-ret", "f-ret", "p-r1", "f-r1", "p-r2", "f-r2"]) $(id).style.stroke = cr;
     const mid = this._col(Number.isFinite(sup) && Number.isFinite(ret) ? (sup + ret) / 2 : sup);
-    for (const id of ["p-floor", "f-floor"]) $(id).style.stroke = mid;
-    for (const id of ["p-floor-in", "f-floor-in"]) $(id).style.stroke = cs;
-    for (const id of ["p-floor-out", "f-floor-out"]) $(id).style.stroke = cr;
+    for (const id of ["p-sup", "f-sup", "p-a", "f-a"]) $(id).style.stroke = cs;
+    for (const id of ["p-b", "f-b"]) $(id).style.stroke = mid;
+    for (const id of ["p-ret", "f-ret", "p-c", "f-c"]) $(id).style.stroke = cr;
     $("b-top").setAttribute("stop-color", cs); $("b-bot").setAttribute("stop-color", cr);
     this._root.querySelectorAll(".radcol").forEach((r) => (r.style.fill = mid));
-    this._root.querySelectorAll(".heatwave").forEach((w) => (w.style.stroke = cs));
 
     const T = (v) => (Number.isFinite(v) ? `${this._fmt(v, 0)} °C` : "–");
     set("v-buf", T(sup)); set("v-sup", T(sup)); set("v-ret", T(ret));
@@ -328,8 +294,10 @@ class HeatpumpMonoblockCard extends HTMLElement {
     set("v-exh", T(this._num("exhaust"))); set("v-suc", T(this._num("suction")));
     set("v-hps", T(this._num("hp_sat")));
     set("v-eev", `${this._fmt(this._num("eev"), 0)} ${this._unit("eev", "P")}`);
-    set("v-comp", Number.isFinite(compHz) ? `${this._fmt(compHz, 0)} Hz` : comp ? "aan" : "uit");
-    set("v-fan", Number.isFinite(fanHz) ? `${this._fmt(fanHz, 0)} Hz` : fan ? "aan" : "uit");
+    set("v-comp", Number.isFinite(compHz) ? `${this._fmt(compHz, 0)} ${this._unit("comp_hz", "Hz")}` : comp ? "aan" : "uit");
+    set("v-fan", Number.isFinite(fanHz) ? `${this._fmt(fanHz, 0)} ${this._unit("fan_hz", "Hz")}` : fan ? "aan" : "uit");
+    const thS = this._st("thermostat"), thC = thS ? parseFloat(thS.attributes.current_temperature) : NaN, thT = thS ? parseFloat(thS.attributes.temperature) : NaN;
+    set("v-emos", Number.isFinite(thC) ? `${this._fmt(thC, 1)}° → ${this._fmt(thT, 1)}°` : "–");
     set("v-set", T(this._num("setpoint")));
     const dt = sup - ret;
     set("v-dt", Number.isFinite(dt) ? `${this._fmt(dt, 1)} K` : "–");
@@ -346,7 +314,7 @@ class HeatpumpMonoblockCard extends HTMLElement {
     set("s-curve", `${wm ? HPM_WORK_NL[wm.state] || wm.state : "–"} · ${cv ? cv.state : "–"}`);
 
     const chip = (id, on) => $(id) && $(id).classList.toggle("on", on);
-    chip("c-comp", comp); chip("c-fan", fan); chip("c-flow", flowing); chip("c-cv", cvOn); chip("c-floor", !!floorOn);
+    chip("c-comp", comp); chip("c-fan", fan); chip("c-flow", flowing); chip("c-cv", cvOn);
     chip("c-def", defrost); chip("c-on", online); chip("c-fault", fault);
 
     let txt = "Stand-by", cls = "";
@@ -362,7 +330,7 @@ class HeatpumpMonoblockCard extends HTMLElement {
 if (!customElements.get("heatpump-monoblock-card")) customElements.define("heatpump-monoblock-card", HeatpumpMonoblockCard);
 window.customCards = window.customCards || [];
 if (!window.customCards.some((c) => c.type === "heatpump-monoblock-card"))
-  window.customCards.push({ type: "heatpump-monoblock-card", name: "Warmtepomp monoblock (geanimeerd)", description: "Monoblock-buitenunit met buffervat, cv-pomp, radiatoren en vloerverwarming met verdeler" });
+  window.customCards.push({ type: "heatpump-monoblock-card", name: "Warmtepomp monoblock (geanimeerd)", description: "Monoblock-buitenunit met open verdeler, circulatiepomp en radiatoren in serie" });
 
 /* heatpump-boiler-card v1.0.0 — geanimeerde warmtepompboiler voor Home Assistant
  * https://github.com/AMensink/warmtepomp-cards — MIT-licentie
