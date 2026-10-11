@@ -109,25 +109,4 @@ Monoblock-kaart aangepast voor een huis met alleen radiatoren:
 - Zes radiatoren in serie (`radiators:`, lijst met namen) en thermostaatwaarde (EMOS) bij de Gang.
 - Eenheid van ventilator/compressor komt uit de sensor; vermogen in kW wordt omgerekend.
 
-### Hewalex boiler (`custom:hewalex-boiler-card`)
-
-Geanimeerde doorsnede van een warmtepompboiler (oorspronkelijk `heatpump-boiler-card`, hernoemd in deze fork). Zelfde opties en entiteiten als de oorspronkelijke boilerkaart; stel ze in onder `entities:`.
-
-```yaml
-type: custom:hewalex-boiler-card
-title: Hewalex boiler
-min_temp: 15
-entities:
-  tank_temp: sensor.warmtepomp_t3_tank_boven
-  setpoint: number.warmtepomp_ingestelde_temp
-  ambient: sensor.warmtepomp_t1_omgevingstemp
-  coil: sensor.warmtepomp_t8_verdamper
-  return_gas: sensor.warmtepomp_t9_voor_compressor
-  exhaust: sensor.warmtepomp_t10_na_compressor
-  compressor: binary_sensor.warmtepomp_compressor
-  fan: binary_sensor.warmtepomp_ventilator
-  water_pump: binary_sensor.warmtepomp_circulatiepomp
-  heater: binary_sensor.warmtepomp_verwarmingselement
-  power_switch: switch.warmtepomp_ingeschakeld
-  power: sensor.hewalex_warmtepomp_power
-```
+De Hewalex-boilerkaart staat in een aparte repo: [B0bWa/Hewalex-boiler-card](https://github.com/B0bWa/Hewalex-boiler-card).
