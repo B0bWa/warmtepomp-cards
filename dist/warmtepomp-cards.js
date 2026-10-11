@@ -618,7 +618,6 @@ class HeatpumpBoilerCard extends HTMLElement {
     <div class="chip" data-k="fan" id="c-fan"><span class="dot"></span>Ventilator</div>
     <div class="chip" data-k="water_pump" id="c-pump"><span class="dot"></span>Waterpomp</div>
     <div class="chip" data-k="heater" id="c-heater"><span class="dot"></span>Element</div>
-    <div class="chip" data-k="defrost" id="c-defrost"><span class="dot"></span>Ontdooien</div>
     <div class="chip" data-k="online" id="c-online"><span class="dot"></span>Online</div>
     <div class="chip warn" data-k="fault" id="c-fault"><span class="dot"></span>Storing</div>
   </div>
@@ -626,9 +625,7 @@ class HeatpumpBoilerCard extends HTMLElement {
     <div class="stat" data-k="power"><div class="k">Vermogen</div><div class="v" id="s-power">–</div></div>
     <div class="stat" data-k="energy_today"><div class="k">Vandaag</div><div class="v" id="s-today">–</div></div>
     <div class="stat" data-k="energy_month"><div class="k">Deze maand</div><div class="v" id="s-month">–</div></div>
-    <div class="stat" data-k="mode"><div class="k">Modus</div><div class="v" id="s-mode">–</div></div>
     <div class="stat" data-k="setpoint"><div class="k">Doeltemperatuur</div><div class="v" id="s-set">–</div></div>
-    <div class="stat" data-k="runtime_defrost"><div class="k">Tot ontdooien</div><div class="v" id="s-rt">–</div></div>
   </div>
 </ha-card>`;
 
