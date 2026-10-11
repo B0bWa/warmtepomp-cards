@@ -1,4 +1,4 @@
-/* warmtepomp-cards v1.3.0 — heatpump-monoblock-card (MIT) */
+/* warmtepomp-cards v1.3.1 — heatpump-monoblock-card (MIT) */
 /* heatpump-monoblock-card v1.0.0 — geanimeerde monoblock-warmtepomp met open verdeler, circulatiepomp en radiatoren in serie (fork B0bWa)
  * https://github.com/AMensink/warmtepomp-cards — MIT-licentie
  * Stel je eigen entiteiten in onder `entities:` in de kaart-YAML; zie README.
@@ -278,7 +278,16 @@ class HeatpumpMonoblockCard extends HTMLElement {
     // cv-pomp: aan zolang de thermostaat vraagt (hvac_action heating/cooling)
     const th = this._st("thermostat");
     const act = th ? String(th.attributes.hvac_action || "").toLowerCase() : "";
-    const cvOn = th ? act === "heating" || act === "cooling" : flowing;
+    // zonder hvac_action (niet elke thermostaat levert die) afleiden uit stand en temperaturen
+    let cvOn = flowing;
+    if (th) {
+      if (act) cvOn = act === "heating" || act === "cooling";
+      else {
+        const cur = parseFloat(th.attributes.current_temperature), tgt = parseFloat(th.attributes.temperature);
+        const stateOn = !["off", "unavailable", "unknown"].includes(String(th.state).toLowerCase());
+        cvOn = stateOn && (Number.isFinite(cur) && Number.isFinite(tgt) ? cur < tgt : flowing);
+      }
+    }
 
     svg.classList.toggle("comp-on", comp);
     svg.classList.toggle("fan-on", fan);
