@@ -1,4 +1,4 @@
-/* warmtepomp-cards v1.2.0 — heatpump-monoblock-card (MIT) */
+/* warmtepomp-cards v1.3.0 — heatpump-monoblock-card (MIT) */
 /* heatpump-monoblock-card v1.0.0 — geanimeerde monoblock-warmtepomp met open verdeler, circulatiepomp en radiatoren in serie (fork B0bWa)
  * https://github.com/AMensink/warmtepomp-cards — MIT-licentie
  * Stel je eigen entiteiten in onder `entities:` in de kaart-YAML; zie README.
@@ -75,10 +75,15 @@ class HeatpumpMonoblockCard extends HTMLElement {
     const entityId = this._e[k]; if (!entityId) return;
     this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId }, bubbles: true, composed: true }));
   }
+  // circulatiepomp in Wilo-stijl: motorkop met led, ronde pompbehuizing met draaiende waaier
   _pump(id, cx, cy, r, k) {
+    const blades = [0, 120, 240].map((a) => `<ellipse cx="${cx}" cy="${cy - r * 0.5}" rx="${r * 0.22}" ry="${r * 0.46}" transform="rotate(${a} ${cx} ${cy})"/>`).join("");
     return `<g class="click" data-k="${k}">
+      <rect class="pumphead" x="${cx - r * 0.75}" y="${cy + r * 0.85}" width="${r * 1.5}" height="${r * 1.45}" rx="3"/>
+      <rect class="pumpled" id="${id}-led" x="${cx - r * 0.35}" y="${cy + r * 1.1}" width="${r * 0.7}" height="${r * 0.32}" rx="1"/>
       <circle cx="${cx}" cy="${cy}" r="${r}" class="pumpbody" id="${id}-body"/>
-      <g id="${id}" style="transform-origin:${cx}px ${cy}px;transform-box:view-box"><path d="M${cx} ${cy} l0 -${r * 0.65} M${cx} ${cy} l${r * 0.56} ${r * 0.33} M${cx} ${cy} l-${r * 0.56} ${r * 0.33}" stroke="var(--primary-text-color,#333)" stroke-width="2.2" stroke-linecap="round"/></g>
+      <g id="${id}" class="impeller" style="transform-origin:${cx}px ${cy}px;transform-box:view-box">${blades}</g>
+      <circle cx="${cx}" cy="${cy}" r="${r * 0.2}" class="pumphub"/>
     </g>`;
   }
 
@@ -134,6 +139,11 @@ class HeatpumpMonoblockCard extends HTMLElement {
   .buf{transition:fill 1.2s ease}
   .pumpbody{fill:var(--card-background-color,#fff);stroke:var(--secondary-text-color,#888);stroke-width:2.5;transition:stroke .4s}
   .sec-on #cvpump-body{stroke:rgb(60,200,90)}
+  .pumphead{fill:var(--secondary-background-color,#e5e5e5);stroke:var(--secondary-text-color,#888);stroke-width:1.5}
+  .pumpled{fill:#777}
+  .sec-on #cvpump-led{fill:rgb(60,200,90)}
+  .impeller{fill:var(--primary-color,#03a9f4);opacity:.85}
+  .pumphub{fill:var(--secondary-text-color,#888)}
   .sec-on #cvpump{animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   @keyframes dash{to{stroke-dashoffset:-28}}
@@ -214,7 +224,7 @@ class HeatpumpMonoblockCard extends HTMLElement {
     <path class="flow sec" id="f-b" d="M622 230 H 412 V 350"/>
     <path class="pipe" id="p-c" d="M412 350 H 622 V 400 H 378"/>
     <path class="flow sec" id="f-c" d="M412 350 H 622 V 400 H 378"/>
-    ${this._pump("cvpump", 398, 50, 11, "thermostat")}
+    ${this._pump("cvpump", 398, 50, 13, "thermostat")}
     <text class="lbl" x="386" y="32" text-anchor="start">${this._config.pump_label}</text>
 
     ${this._config.radiators.slice(0, 6).map((name, i) => {
