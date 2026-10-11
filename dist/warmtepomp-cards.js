@@ -570,7 +570,6 @@ class HeatpumpBoilerCard extends HTMLElement {
     <!-- waarden module -->
     <g class="click" data-k="ambient"><text class="lbl" x="4" y="226">Lucht in</text><text class="val" x="4" y="244" id="v-ambient">–</text></g>
     <g class="click" data-k="coil"><text class="lbl" x="130" y="112">Verdamper</text><text class="val" x="130" y="130" id="v-coil">–</text></g>
-    <g class="click" data-k="eev"><text class="lbl" x="214" y="150">Ventiel</text><text class="val" x="214" y="168" id="v-eev">–</text></g>
     <g class="click" data-k="return_gas"><text class="lbl" x="206" y="62">Zuiggas</text><text class="val" x="206" y="80" id="v-return">–</text></g>
     <g class="click" data-k="exhaust"><text class="lbl" x="316" y="80">Persgas</text><text class="val" x="316" y="98" id="v-exhaust">–</text></g>
     <g class="click" data-k="compressor"><text class="lbl" x="262" y="176">Compressor</text><text class="val" x="262" y="192" id="v-comp">–</text></g>
@@ -619,7 +618,6 @@ class HeatpumpBoilerCard extends HTMLElement {
     <div class="chip" data-k="water_pump" id="c-pump"><span class="dot"></span>Waterpomp</div>
     <div class="chip" data-k="heater" id="c-heater"><span class="dot"></span>Element</div>
     <div class="chip" data-k="online" id="c-online"><span class="dot"></span>Online</div>
-    <div class="chip warn" data-k="fault" id="c-fault"><span class="dot"></span>Storing</div>
   </div>
   <div class="grid">
     <div class="stat" data-k="power"><div class="k">Vermogen</div><div class="v" id="s-power">–</div></div>
